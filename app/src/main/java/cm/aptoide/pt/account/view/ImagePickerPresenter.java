@@ -16,7 +16,6 @@ import java.io.File;
 import rx.Completable;
 import rx.Scheduler;
 import rx.Single;
-import rx.schedulers.Schedulers;
 
 public class ImagePickerPresenter implements Presenter {
 
@@ -29,6 +28,8 @@ public class ImagePickerPresenter implements Presenter {
   private final PhotoFileGenerator photoFileGenerator;
   private final ImageValidator imageValidator;
   private final Scheduler uiScheduler;
+  private final Scheduler ioScheduler;
+  private final Scheduler computationScheduler;
   private final UriToPathResolver uriToPathResolver;
   private final ImagePickerNavigator navigator;
   private final ContentResolver contentResolver;
@@ -36,7 +37,8 @@ public class ImagePickerPresenter implements Presenter {
 
   public ImagePickerPresenter(ImagePickerView view, CrashReport crashReport,
       AccountPermissionProvider accountPermissionProvider, PhotoFileGenerator photoFileGenerator,
-      ImageValidator imageValidator, Scheduler viewScheduler, UriToPathResolver uriToPathResolver,
+      ImageValidator imageValidator, Scheduler viewScheduler, Scheduler ioScheduler,
+      Scheduler computationScheduler, UriToPathResolver uriToPathResolver,
       ImagePickerNavigator navigator, ContentResolver contentResolver, ImageLoader imageLoader) {
     this.view = view;
     this.crashReport = crashReport;
@@ -44,6 +46,8 @@ public class ImagePickerPresenter implements Presenter {
     this.photoFileGenerator = photoFileGenerator;
     this.imageValidator = imageValidator;
     this.uiScheduler = viewScheduler;
+    this.ioScheduler = ioScheduler;
+    this.computationScheduler = computationScheduler;
     this.uriToPathResolver = uriToPathResolver;
     this.navigator = navigator;
     this.contentResolver = contentResolver;
@@ -70,8 +74,10 @@ public class ImagePickerPresenter implements Presenter {
   @NonNull private Single<String> getFileNameFromCameraWithUri(String createdUri) {
     return navigator.navigateToCameraWithImageUri(CAMERA_PICK, Uri.parse(createdUri))
         .first()
+        .observeOn(computationScheduler)
         .flatMapSingle(__ -> saveCameraPictureInPublicPhotos(createdUri))
-        .toSingle();
+        .toSingle()
+        .observeOn(uiScheduler);
   }
 
   /**
@@ -84,18 +90,18 @@ public class ImagePickerPresenter implements Presenter {
           createdUri.substring(createdUri.lastIndexOf(File.pathSeparator)), null);
       image.recycle();
       return Single.just(uriToPathResolver.getCameraStoragePath(Uri.parse(path)))
-          .subscribeOn(Schedulers.io());
+          .subscribeOn(ioScheduler);
     } else {
       return Single.just(uriToPathResolver.getCameraStoragePath(Uri.parse(createdUri)))
-          .subscribeOn(Schedulers.io());
+          .subscribeOn(ioScheduler);
     }
   }
 
   private void handleCameraSelection() {
     view.getLifecycleEvent()
         .filter(event -> event == View.LifecycleEvent.CREATE)
-        .flatMap(__ -> view.dialogCameraSelected()
-            .doOnNext(__2 -> accountPermissionProvider.requestCameraPermission(CAMERA_PICK)))
+        .flatMap(__ -> view.dialogCameraSelected())
+        .doOnNext(__2 -> accountPermissionProvider.requestCameraPermission(CAMERA_PICK))
         .compose(view.bindUntilEvent(View.LifecycleEvent.DESTROY))
         .subscribe(__ -> {
         }, err -> crashReport.log(err));
@@ -153,18 +159,17 @@ public class ImagePickerPresenter implements Presenter {
             })
             .doOnNext(__2 -> view.dismissLoadImageDialog())
             .flatMapSingle(__2 -> photoFileGenerator.generateNewImageFileUriAsString())
-            .flatMapCompletable(
-                createdUri -> getFileNameFromCameraWithUri(createdUri).observeOn(uiScheduler)
-                    .flatMapCompletable(
-                        fullFilePath -> loadValidImageOrThrowForCamera(fullFilePath)))
-            .doOnError(err -> {
-              if (err instanceof InvalidImageException) {
-                view.showIconPropertiesError((InvalidImageException) err);
-              } else {
-                crashReport.log(err);
-              }
-            })
-            .retry())
+            .flatMapSingle(createdUri -> getFileNameFromCameraWithUri(createdUri))
+            .observeOn(uiScheduler)
+            .flatMapCompletable(fullFilePath -> loadValidImageOrThrowForCamera(fullFilePath)))
+        .doOnError(err -> {
+          if (err instanceof InvalidImageException) {
+            view.showIconPropertiesError((InvalidImageException) err);
+          } else {
+            crashReport.log(err);
+          }
+        })
+        .retry()
         .compose(view.bindUntilEvent(View.LifecycleEvent.DESTROY))
         .subscribe(__ -> {
         }, err -> crashReport.log(err));

@@ -68,7 +68,9 @@ public abstract class PermissionProviderActivity extends PermissionServiceActivi
     return permissionRelay.flatMap(permissions -> Observable.zip(Observable.just(permissions),
         Observable.just(this.requestedCodeGrantedPermissions.get(requestCode)),
         (systemPermissions, savedPermissions) -> {
-          systemPermissions.addAll(savedPermissions);
+          if (systemPermissions != null && savedPermissions != null) {
+            systemPermissions.addAll(savedPermissions);
+          }
           return systemPermissions;
         })
         .flatMapIterable(mergedPermissions -> mergedPermissions)

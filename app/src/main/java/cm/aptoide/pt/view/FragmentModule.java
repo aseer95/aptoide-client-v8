@@ -177,9 +177,9 @@ import rx.subscriptions.CompositeSubscription;
       ImagePickerNavigator imagePickerNavigator) {
     return new ImagePickerPresenter((ImagePickerView) fragment, CrashReport.getInstance(),
         accountPermissionProvider, photoFileGenerator, imageValidator,
-        AndroidSchedulers.mainThread(), uriToPathResolver, imagePickerNavigator,
-        fragment.getActivity()
-            .getContentResolver(), ImageLoader.with(fragment.getContext()));
+        AndroidSchedulers.mainThread(), Schedulers.io(), Schedulers.computation(),
+        uriToPathResolver, imagePickerNavigator, fragment.getActivity()
+        .getContentResolver(), ImageLoader.with(fragment.getContext()));
   }
 
   @FragmentScope @Provides ManageStorePresenter provideManageStorePresenter(
