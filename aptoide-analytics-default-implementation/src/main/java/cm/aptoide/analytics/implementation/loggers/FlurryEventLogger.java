@@ -5,7 +5,6 @@ import cm.aptoide.analytics.AnalyticsLogger;
 import cm.aptoide.analytics.AnalyticsManager;
 import cm.aptoide.analytics.EventLogger;
 import cm.aptoide.analytics.SessionLogger;
-import cm.aptoide.analyticsimplementation.BuildConfig;
 import com.flurry.android.FlurryAgent;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,8 +44,6 @@ public class FlurryEventLogger implements EventLogger, SessionLogger {
   }
 
   @Override public void setup() {
-    new FlurryAgent.Builder().withLogEnabled(false)
-        .build(context, BuildConfig.FLURRY_KEY);
   }
 
   private Map<String, String> map(Map<String, Object> data) {
