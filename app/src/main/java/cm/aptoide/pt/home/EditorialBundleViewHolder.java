@@ -31,6 +31,7 @@ public class EditorialBundleViewHolder extends AppBundleViewHolder {
   private final TextView editorialViews;
   private final ImageButton reactButton;
   private final TextView numberOfReactions;
+  private final View reactView;
   private ImageView[] imageViews;
 
   public EditorialBundleViewHolder(View view, PublishSubject<HomeEvent> uiEventsListener) {
@@ -41,7 +42,8 @@ public class EditorialBundleViewHolder extends AppBundleViewHolder {
     this.editorialSubtitle = (TextView) view.findViewById(R.id.editorial_subtitle);
     this.editorialViews = view.findViewById(R.id.editorial_views);
     this.backgroundImage = (ImageView) view.findViewById(R.id.background_image);
-    this.reactButton = view.findViewById(R.id.add_reactions);
+    this.reactView = view.findViewById(R.id.add_reactions);
+    this.reactButton = (ImageButton) view.findViewById(R.id.add_reactions_button);
     ImageView firstReaction = view.findViewById(R.id.reaction_1);
     ImageView secondReaction = view.findViewById(R.id.reaction_2);
     ImageView thirdReaction = view.findViewById(R.id.reaction_3);
@@ -71,14 +73,7 @@ public class EditorialBundleViewHolder extends AppBundleViewHolder {
     editorialViews.setText(String.format(itemView.getContext()
             .getString(R.string.editorial_card_short_number_views),
         formatNumberOfViews(numberOfViews)));
-    reactButton.setOnClickListener(view -> uiEventsListener.onNext(
-        new EditorialHomeEvent(cardId, type, homeBundle, position,
-            HomeEvent.Type.REACT_SINGLE_PRESS)));
-    reactButton.setOnLongClickListener(view -> {
-      uiEventsListener.onNext(new EditorialHomeEvent(cardId, type, homeBundle, position,
-          HomeEvent.Type.REACT_LONG_PRESS));
-      return true;
-    });
+    setReactButtonListeners(cardId, type, homeBundle, position);
     editorialCard.setOnClickListener(view -> uiEventsListener.onNext(
         new EditorialHomeEvent(cardId, type, homeBundle, position, HomeEvent.Type.EDITORIAL)));
   }
@@ -144,5 +139,21 @@ public class EditorialBundleViewHolder extends AppBundleViewHolder {
       imageView.setVisibility(View.GONE);
     }
     this.numberOfReactions.setVisibility(View.GONE);
+  }
+
+  private void setReactButtonListeners(String cardId, String type, HomeBundle homeBundle,
+      int position) {
+    View.OnClickListener clickListener = view -> uiEventsListener.onNext(
+        new EditorialHomeEvent(cardId, type, homeBundle, position,
+            HomeEvent.Type.REACT_SINGLE_PRESS));
+    View.OnLongClickListener longClickListener = view -> {
+      uiEventsListener.onNext(new EditorialHomeEvent(cardId, type, homeBundle, position,
+          HomeEvent.Type.REACT_LONG_PRESS));
+      return true;
+    };
+    reactView.setOnClickListener(clickListener);
+    reactView.setOnLongClickListener(longClickListener);
+    reactButton.setOnClickListener(clickListener);
+    reactButton.setOnLongClickListener(longClickListener);
   }
 }

@@ -2,51 +2,67 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
     >
-  <ImageButton
+  <RelativeLayout
       android:id="@+id/add_reactions"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:layout_alignParentLeft="true"
       android:layout_alignParentStart="true"
       android:layout_centerVertical="true"
-      android:background="@drawable/round_grey_fog_button"
       android:paddingBottom="4dp"
       android:paddingLeft="8dp"
       android:paddingRight="8dp"
-      android:paddingTop="4dp"
-      android:src="@drawable/ic_reaction_emoticon_grey_fog"
-      />
+      android:paddingStart="8dp"
+      android:paddingTop="8dp"
+      >
+    <ImageButton
+        android:id="@+id/add_reactions_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/round_grey_fog_button"
+        android:paddingBottom="4dp"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:paddingTop="4dp"
+        android:src="@drawable/ic_reaction_emoticon_grey_fog"
+        />
+  </RelativeLayout>
 
-  <include
-      layout="@layout/reactions"
-      android:id="@+id/reactions"
+  <RelativeLayout
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:layout_centerVertical="true"
-      android:layout_marginLeft="9dp"
-      android:layout_marginStart="9dp"
       android:layout_toEndOf="@id/add_reactions"
       android:layout_toRightOf="@id/add_reactions"
-      />
+      android:paddingTop="4dp"
+      >
+    <include
+        layout="@layout/reactions"
+        android:id="@+id/reactions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="1dp"
+        android:layout_marginStart="1dp"
+        />
 
-  <TextView
-      android:id="@+id/number_of_reactions"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_centerVertical="true"
-      android:layout_marginLeft="11.4dp"
-      android:layout_marginStart="11.4dp"
-      android:layout_toEndOf="@id/reactions"
-      android:layout_toRightOf="@id/reactions"
-      android:textColor="@color/grey_fog_dark"
-      android:textStyle="bold"
-      android:visibility="invisible"
-      tools:text="100"
-      tools:visibility="visible"
-      style="@style/Aptoide.TextView.Regular.XS"
-      />
+    <TextView
+        android:id="@+id/number_of_reactions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="11.4dp"
+        android:layout_marginStart="11.4dp"
+        android:layout_toEndOf="@id/reactions"
+        android:layout_toRightOf="@id/reactions"
+        android:textColor="@color/grey_fog_dark"
+        android:textStyle="bold"
+        android:visibility="invisible"
+        tools:text="100"
+        tools:visibility="visible"
+        style="@style/Aptoide.TextView.Regular.XS"
+        />
+  </RelativeLayout>
 
 </RelativeLayout>

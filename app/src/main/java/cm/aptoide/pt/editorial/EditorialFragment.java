@@ -103,6 +103,7 @@ public class EditorialFragment extends NavigationTrackFragment
   private ImageView resumeDownload;
   private View downloadControlsLayout;
   private RelativeLayout cardInfoLayout;
+  private View reactView;
   private ImageButton reactButton;
   private ImageView firstReaction;
   private ImageView secondReaction;
@@ -183,7 +184,8 @@ public class EditorialFragment extends NavigationTrackFragment
     editorialItems.setLayoutManager(layoutManager);
     editorialItems.setAdapter(adapter);
 
-    reactButton = view.findViewById(R.id.add_reactions);
+    reactButton = view.findViewById(R.id.add_reactions_button);
+    reactView = view.findViewById(R.id.add_reactions);
     firstReaction = view.findViewById(R.id.reaction_1);
     secondReaction = view.findViewById(R.id.reaction_2);
     thirdReaction = view.findViewById(R.id.reaction_3);
@@ -304,6 +306,7 @@ public class EditorialFragment extends NavigationTrackFragment
     backArrow = null;
 
     reactButton = null;
+    reactView = null;
     firstReaction = null;
     secondReaction = null;
     thirdReaction = null;
@@ -574,11 +577,11 @@ public class EditorialFragment extends NavigationTrackFragment
   }
 
   @Override public Observable<Void> reactionsButtonClicked() {
-    return RxView.clicks(reactButton);
+    return Observable.merge(RxView.clicks(reactView), RxView.clicks(reactButton));
   }
 
   @Override public Observable<Void> reactionsButtonLongPressed() {
-    return RxView.longClicks(reactButton);
+    return Observable.merge(RxView.longClicks(reactView), RxView.longClicks(reactButton));
   }
 
   @Override public void setReactions(String userReaction, List<TopReaction> reactions,
