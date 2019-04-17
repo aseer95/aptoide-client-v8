@@ -1438,13 +1438,10 @@ import static com.google.android.gms.auth.api.Auth.GOOGLE_SIGN_IN_API;
   @Singleton @Provides AnalyticsManager providesAnalyticsManager(
       @Named("aptoideLogger") EventLogger aptoideBiEventLogger,
       @Named("facebook") EventLogger facebookEventLogger,
-      @Named("fabric") EventLogger fabricEventLogger,
-      @Named("flurryLogger") EventLogger flurryEventLogger, HttpKnockEventLogger knockEventLogger,
+      @Named("fabric") EventLogger fabricEventLogger, HttpKnockEventLogger knockEventLogger,
       @Named("aptoideEvents") Collection<String> aptoideEvents,
       @Named("facebookEvents") Collection<String> facebookEvents,
       @Named("fabricEvents") Collection<String> fabricEvents,
-      @Named("flurryEvents") Collection<String> flurryEvents,
-      @Named("flurrySession") SessionLogger flurrySessionLogger,
       @Named("aptoideSession") SessionLogger aptoideSessionLogger,
       @Named("normalizer") AnalyticsEventParametersNormalizer analyticsNormalizer,
       AnalyticsLogger logger) {
@@ -1452,8 +1449,6 @@ import static com.google.android.gms.auth.api.Auth.GOOGLE_SIGN_IN_API;
     return new AnalyticsManager.Builder().addLogger(aptoideBiEventLogger, aptoideEvents)
         .addLogger(facebookEventLogger, facebookEvents)
         .addLogger(fabricEventLogger, fabricEvents)
-        .addLogger(flurryEventLogger, flurryEvents)
-        .addSessionLogger(flurrySessionLogger)
         .addSessionLogger(aptoideSessionLogger)
         .setKnockLogger(knockEventLogger)
         .setAnalyticsNormalizer(analyticsNormalizer)
