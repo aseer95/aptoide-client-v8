@@ -40,7 +40,7 @@ public class PullingContentService extends BaseService {
   public static final String PUSH_NOTIFICATIONS_ACTION = "PUSH_NOTIFICATIONS_ACTION";
   public static final String UPDATES_ACTION = "UPDATES_ACTION";
   public static final String BOOT_COMPLETED_ACTION = "BOOT_COMPLETED_ACTION";
-  public static final long UPDATES_INTERVAL = AlarmManager.INTERVAL_HALF_DAY;
+  public static final long UPDATES_INTERVAL = AlarmManager.INTERVAL_DAY;
   public static final int UPDATE_NOTIFICATION_ID = 123;
   @Inject @Named("marketName") String marketName;
   @Inject DownloadFactory downloadFactory;
@@ -112,6 +112,10 @@ public class PullingContentService extends BaseService {
   private void setUpdatesAction(int startId) {
     subscriptions.add(updateRepository.sync(true, false)
         .andThen(updateRepository.getAll(false))
+        .flatMap(updates -> Observable.just(updates)
+            .flatMapIterable(list -> list)
+            .filter(update -> !update.isAppcUpgrade())
+            .toList())
         .first()
         .observeOn(Schedulers.computation())
         .flatMap(updates -> autoUpdate(updates).flatMap(autoUpdateRunned -> {
@@ -148,7 +152,7 @@ public class PullingContentService extends BaseService {
                 .map(updates -> {
                   ArrayList<Download> downloadList = new ArrayList<>(updates.size());
                   for (Update update : updates) {
-                    downloadList.add(downloadFactory.create(update));
+                    downloadList.add(downloadFactory.create(update, false));
                   }
                   return downloadList;
                 })
@@ -173,8 +177,9 @@ public class PullingContentService extends BaseService {
         && numberUpdates != ManagerPreferences.getLastUpdates(sharedPreferences)
         && ManagerPreferences.isUpdateNotificationEnable(sharedPreferences)) {
       CharSequence tickerText =
-          AptoideUtils.StringU.getFormattedString(R.string.has_updates, getResources(), marketName);
-      CharSequence contentTitle = marketName;
+          AptoideUtils.StringU.getFormattedString(R.string.has_updates, getResources(),
+              getString(R.string.app_name));
+      CharSequence contentTitle = getString(R.string.app_name);
       CharSequence contentText =
           AptoideUtils.StringU.getFormattedString(R.string.new_updates, getResources(),
               numberUpdates);

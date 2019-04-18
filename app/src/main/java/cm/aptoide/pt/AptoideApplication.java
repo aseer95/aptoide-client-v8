@@ -22,6 +22,7 @@ import cm.aptoide.analytics.implementation.navigation.NavigationTracker;
 import cm.aptoide.pt.account.AccountSettingsBodyInterceptorV7;
 import cm.aptoide.pt.account.AdultContentAnalytics;
 import cm.aptoide.pt.ads.AdsRepository;
+import cm.aptoide.pt.ads.AdsUserPropertyManager;
 import cm.aptoide.pt.analytics.FirstLaunchAnalytics;
 import cm.aptoide.pt.billing.Billing;
 import cm.aptoide.pt.billing.BillingAnalytics;
@@ -110,7 +111,7 @@ import com.mopub.common.SdkConfiguration;
 import com.mopub.common.logging.MoPubLog;
 import com.mopub.nativeads.AppLovinBaseAdapterConfiguration;
 import com.mopub.nativeads.AppnextBaseAdapterConfiguration;
-import com.mopub.nativeads.StartAppBaseConfiguration;
+import com.mopub.nativeads.InMobiBaseAdapterConfiguration;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -180,6 +181,7 @@ public abstract class AptoideApplication extends Application {
   @Inject SettingsManager settingsManager;
   @Inject InstallManager installManager;
   @Inject @Named("default-followed-stores") List<String> defaultFollowedStores;
+  @Inject AdsUserPropertyManager adsUserPropertyManager;
   private LeakTool leakTool;
   private String aptoideMd5sum;
   private BillingAnalytics billingAnalytics;
@@ -341,6 +343,8 @@ public abstract class AptoideApplication extends Application {
     analyticsManager.setup();
     invalidRefreshTokenLogoutManager.start();
     aptoideDownloadManager.start();
+
+    adsUserPropertyManager.start();
   }
 
   private void initializeMoPub(Context context, String adUnitPlacementId) {
@@ -352,8 +356,7 @@ public abstract class AptoideApplication extends Application {
             .withAdditionalNetwork(AppnextBaseAdapterConfiguration.class.toString())
             .withMediatedNetworkConfiguration(AppnextBaseAdapterConfiguration.class.toString(),
                 getMediationNetworkConfiguration(BuildConfig.MOPUB_BANNER_50_HOME_PLACEMENT_ID))
-            .withAdditionalNetwork(StartAppBaseConfiguration.class.toString())
-            .withMediatedNetworkConfiguration(StartAppBaseConfiguration.class.toString(),
+            .withMediatedNetworkConfiguration(InMobiBaseAdapterConfiguration.class.toString(),
                 getMediationNetworkConfiguration(BuildConfig.MOPUB_BANNER_50_HOME_PLACEMENT_ID))
             .withLogLevel(MoPubLog.LogLevel.DEBUG)
             .build();
@@ -605,8 +608,7 @@ public abstract class AptoideApplication extends Application {
   private Completable sendAppStartToAnalytics() {
     return firstLaunchAnalytics.sendAppStart(this,
         SecurePreferencesImplementation.getInstance(getApplicationContext(),
-            getDefaultSharedPreferences()), WebService.getDefaultConverter(), getDefaultClient(),
-        getAccountSettingsBodyInterceptorPoolV7(), getTokenInvalidator());
+            getDefaultSharedPreferences()));
   }
 
   private Completable checkAppSecurity() {

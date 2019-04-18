@@ -4,6 +4,8 @@ apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
 apply plugin: 'realm-android'
 apply plugin: 'com.getkeepsafe.dexcount'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 buildscript {
 
@@ -213,8 +215,6 @@ android {
     variant.buildConfigField "String", "GMS_SERVER_ID", "\"" + project.GMS_SERVER_ID_VANILLA + "\""
     variant.buildConfigField "String", "DEFAULT_PAYMENT_SERVICE_TYPE",
         "\"" + project.DEFAULT_PAYMENT_SERVICE_TYPE + "\""
-    variant.buildConfigField "int", "DEFAULT_SOCIAL_NOTIFICATION_SYNC_INTERVAL_MILLIS",
-        project.DEFAULT_SOCIAL_NOTIFICATION_SYNC_INTERVAL_MILLIS
     variant.buildConfigField "int", "CAMPAIGN_NOTIFICATION_SYNC_INTERVAL_MILLIS",
         project.CAMPAIGN_NOTIFICATION_SYNC_INTERVAL_MILLIS
     variant.buildConfigField "int", "PAYMENT_AUTHORIZATION_SYNC_INTERVAL_MILLIS",
@@ -280,8 +280,8 @@ android {
         "\"" + project.MOPUB_VUNGLE_APPLICATION_ID + "\""
     variant.buildConfigField "String", "MOPUB_UNITYADS_GAME_ID",
         "\"" + project.MOPUB_UNITYADS_GAME_ID + "\""
-    variant.buildConfigField "String", "MOPUB_STARTAPP_APPLICATION_ID",
-        "\"" + project.MOPUB_STARTAPP_APPLICATION_ID + "\""
+    variant.buildConfigField "String", "MOPUB_INMOBI_ACCOUNT_ID",
+        "\"" + project.MOPUB_INMOBI_ACCOUNT_ID + "\""
 
     variant.buildConfigField "String", "MOPUB_VIDEO_APPVIEW_PLACEMENT_ID",
         "\"" + project.MOPUB_VIDEO_PLACEMENT_ID_PROD + "\""
@@ -389,6 +389,9 @@ dependencies {
   androidTestImplementation "com.squareup.okhttp3:okhttp:${OKHTTP_VERSION}"
   androidTestImplementation "com.squareup.retrofit2:retrofit:${RETROFIT_VERSION}"
 
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+
   implementation "com.android.support:support-annotations:${SUPPORT_LIB_VERSION}"
 
   implementation "com.fasterxml.jackson.core:jackson-databind:${JACKSON_VERSION}"
@@ -472,15 +475,17 @@ dependencies {
   implementation "com.unity3d.ads:unity-ads:${UNITY_ADS_SDK_VERSION}"
   implementation "com.mopub.mediation:unityads:${MOPUB_MEDIATION_UNITYADS_VERSION}"
 
-  //StartApp
-  implementation "com.startapp:inapp-sdk:${STARTAPP_SDK_VERSION}"
-
   //AppNext
   implementation "com.appnext.sdk:ads:${APPNEXT_SDK_VERSION}"
   implementation "com.appnext.sdk:banners:${APPNEXT_SDK_VERSION}"
   implementation "com.appnext.sdk:native-ads2:${APPNEXT_SDK_VERSION}"
   implementation "com.appnext.sdk.adapters:mopub-native-ads:${APPNEXT_SDK_VERSION}"
   implementation "com.appnext.sdk.adapters:mopub-banners:${APPNEXT_SDK_VERSION}"
+
+  //Inmobi
+  implementation "com.inmobi.monetization:inmobi-ads:${INMOBI_SDK_VERSION}"
+  implementation "com.squareup.picasso:picasso:${PICASSO_VERSION}"
+
 
   // paypal SDK
   implementation("com.paypal.sdk:paypal-android-sdk:${PAYPAL_SDK}") {
@@ -521,7 +526,11 @@ dependencies {
   implementation "com.google.android.gms:play-services-safetynet:${PLAY_SERVICES_VERSION}"
 
 
-  implementation "com.facebook.android:facebook-android-sdk:${FACEBOOK_ANDROID_SDK_VERSION}"
+  // Facebook Core (Analytics)
+  implementation "com.facebook.android:facebook-core:${FACEBOOK_ANDROID_SDK_VERSION}"
+
+  // Facebook Login
+  implementation "com.facebook.android:facebook-login:${FACEBOOK_ANDROID_SDK_VERSION}"
 
 
   leakImplementation "com.squareup.leakcanary:leakcanary-android:${LEAK_CANARY_VERSION}"
@@ -540,6 +549,7 @@ dependencies {
   implementation "com.braintreepayments:card-form:${CARD_FORM_VERSION}"
 
   implementation "com.google.dagger:dagger:${DAGGER_VERSION}"
+
   annotationProcessor "com.google.dagger:dagger-compiler:${DAGGER_VERSION}"
 
   implementation("com.asfoundation:appcoins-contract-proxy:${APPC_CONTRACT_PROXY_VERSION}") {

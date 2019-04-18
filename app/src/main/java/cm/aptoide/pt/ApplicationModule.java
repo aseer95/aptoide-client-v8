@@ -73,6 +73,7 @@ import cm.aptoide.pt.account.view.user.NewsletterManager;
 import cm.aptoide.pt.actions.PermissionManager;
 import cm.aptoide.pt.addressbook.AddressBookAnalytics;
 import cm.aptoide.pt.ads.AdsRepository;
+import cm.aptoide.pt.ads.AdsUserPropertyManager;
 import cm.aptoide.pt.ads.MinimalAdMapper;
 import cm.aptoide.pt.ads.MoPubAdsManager;
 import cm.aptoide.pt.ads.MoPubAnalytics;
@@ -99,7 +100,7 @@ import cm.aptoide.pt.app.view.donations.DonationsService;
 import cm.aptoide.pt.app.view.donations.WalletService;
 import cm.aptoide.pt.appview.PreferencesManager;
 import cm.aptoide.pt.appview.PreferencesPersister;
-import cm.aptoide.pt.autoupdate.AutoUpdateService;
+import cm.aptoide.pt.autoupdate.Service;
 import cm.aptoide.pt.billing.BillingAnalytics;
 import cm.aptoide.pt.blacklist.BlacklistManager;
 import cm.aptoide.pt.blacklist.BlacklistPersistence;
@@ -1175,6 +1176,13 @@ import static com.google.android.gms.auth.api.Auth.GOOGLE_SIGN_IN_API;
         moPubNativeAdExperiment, walletAdsOfferManager);
   }
 
+  @Singleton @Provides AdsUserPropertyManager providesMoPubAdsService(
+      MoPubAdsManager moPubAdsManager, InstalledRepository installedRepository,
+      MoPubAnalytics moPubAnalytics, CrashReport crashReport) {
+    return new AdsUserPropertyManager(moPubAdsManager, installedRepository, moPubAnalytics,
+        crashReport, Schedulers.io());
+  }
+
   @Singleton @Provides Retrofit providesSearchSuggestionsRetrofit(
       @Named("ws-prod-suggestions-base-url") String baseUrl,
       @Named("default") OkHttpClient httpClient, Converter.Factory converterFactory,
@@ -1282,9 +1290,9 @@ import static com.google.android.gms.auth.api.Auth.GOOGLE_SIGN_IN_API;
     return retrofit.create(RetrofitAptoideBiService.ServiceV7.class);
   }
 
-  @Singleton @Provides AutoUpdateService.Service providesAutoUpdateService(
+  @Singleton @Provides Service providesAutoUpdateService(
       @Named("retrofit-auto-update") Retrofit retrofit) {
-    return retrofit.create(AutoUpdateService.Service.class);
+    return retrofit.create(Service.class);
   }
 
   @Singleton @Provides SearchAbTestService.Service providesSearchAbTestRetrofit(
@@ -1641,7 +1649,7 @@ import static com.google.android.gms.auth.api.Auth.GOOGLE_SIGN_IN_API;
 
   @Singleton @Provides ABTestService providesABTestService(ABTestService.ServiceV7 serviceV7,
       IdsRepository idsRepository) {
-    return new ABTestService(serviceV7, idsRepository.getUniqueIdentifier());
+    return new ABTestService(serviceV7, idsRepository, Schedulers.io());
   }
 
   @Singleton @Provides RealmExperimentPersistence providesRealmExperimentPersistence(
@@ -1856,7 +1864,8 @@ import static com.google.android.gms.auth.api.Auth.GOOGLE_SIGN_IN_API;
         EditorialAnalytics.CURATION_CARD_INSTALL,
         EditorialAnalytics.EDITORIAL_BN_CURATION_CARD_INSTALL, PromotionsAnalytics.PROMOTION_DIALOG,
         PromotionsAnalytics.PROMOTIONS_INTERACT, PromotionsAnalytics.VALENTINE_MIGRATOR,
-        AppViewAnalytics.ADS_BLOCK_BY_OFFER);
+        AppViewAnalytics.ADS_BLOCK_BY_OFFER, AppViewAnalytics.APPC_SIMILAR_APP_INTERACT,
+        AppViewAnalytics.BONUS_GAME_WALLET_OFFER_19);
   }
 
   @Singleton @Provides AptoideShortcutManager providesShortcutManager() {

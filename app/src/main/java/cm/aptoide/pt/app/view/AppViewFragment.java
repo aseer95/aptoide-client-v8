@@ -60,7 +60,6 @@ import cm.aptoide.pt.app.AppViewViewModel;
 import cm.aptoide.pt.app.DownloadAppViewModel;
 import cm.aptoide.pt.app.DownloadModel;
 import cm.aptoide.pt.app.ReviewsViewModel;
-import cm.aptoide.pt.app.SimilarAppsViewModel;
 import cm.aptoide.pt.app.WalletPromotionViewModel;
 import cm.aptoide.pt.app.view.donations.Donation;
 import cm.aptoide.pt.app.view.donations.DonationsAdapter;
@@ -82,12 +81,10 @@ import cm.aptoide.pt.home.SnapToStartHelper;
 import cm.aptoide.pt.install.view.remote.RemoteInstallDialog;
 import cm.aptoide.pt.networking.image.ImageLoader;
 import cm.aptoide.pt.permission.DialogPermissions;
-import cm.aptoide.pt.repository.RepositoryFactory;
 import cm.aptoide.pt.reviews.LanguageFilterHelper;
 import cm.aptoide.pt.search.model.SearchAdResult;
 import cm.aptoide.pt.share.ShareDialogs;
 import cm.aptoide.pt.store.StoreTheme;
-import cm.aptoide.pt.timeline.SocialRepository;
 import cm.aptoide.pt.timeline.TimelineAnalytics;
 import cm.aptoide.pt.util.AppUtils;
 import cm.aptoide.pt.util.ReferrerUtils;
@@ -161,7 +158,6 @@ public class AppViewFragment extends NavigationTrackFragment implements AppViewV
   private PublishSubject<ReadMoreClickEvent> readMoreClick;
   private PublishSubject<Void> loginSnackClick;
   private PublishSubject<SimilarAppClickEvent> similarAppClick;
-  private PublishSubject<SimilarAppClickEvent> similarAppcAppClick;
   private PublishSubject<ShareDialogs.ShareResponse> shareDialogClick;
   private PublishSubject<Integer> reviewsAutoScroll;
   private PublishSubject<Void> noNetworkRetryClick;
@@ -173,7 +169,6 @@ public class AppViewFragment extends NavigationTrackFragment implements AppViewV
   private PublishSubject<AppBoughClickEvent> appBought;
   private PublishSubject<String> apkfyDialogConfirmSubject;
   private PublishSubject<Boolean> similarAppsVisibilitySubject;
-  private PublishSubject<Boolean> similarAppcAppsVisibilitySubject;
   private PublishSubject<DownloadModel.Action> installClickSubject;
   private PublishSubject<MoPubInterstitialAdClickType> interstitialClick;
 
@@ -298,7 +293,6 @@ public class AppViewFragment extends NavigationTrackFragment implements AppViewV
     readMoreClick = PublishSubject.create();
     loginSnackClick = PublishSubject.create();
     similarAppClick = PublishSubject.create();
-    similarAppcAppClick = PublishSubject.create();
     shareDialogClick = PublishSubject.create();
     ready = PublishSubject.create();
     reviewsAutoScroll = PublishSubject.create();
@@ -306,7 +300,6 @@ public class AppViewFragment extends NavigationTrackFragment implements AppViewV
     genericRetryClick = PublishSubject.create();
     apkfyDialogConfirmSubject = PublishSubject.create();
     similarAppsVisibilitySubject = PublishSubject.create();
-    similarAppcAppsVisibilitySubject = PublishSubject.create();
     shareRecommendsDialogClick = PublishSubject.create();
     skipRecommendsDialogClick = PublishSubject.create();
     dontShowAgainRecommendsDialogClick = PublishSubject.create();
@@ -1051,8 +1044,6 @@ public class AppViewFragment extends NavigationTrackFragment implements AppViewV
     AptoideApplication application = (AptoideApplication) getContext().getApplicationContext();
     TimelineAnalytics analytics = application.getTimelineAnalytics();
     if (application.isCreateStoreUserPrivacyEnabled()) {
-      SocialRepository socialRepository = RepositoryFactory.getSocialRepository(getActivity(),
-          application.getDefaultSharedPreferences());
       LayoutInflater inflater = LayoutInflater.from(getActivity());
       AlertDialog alertDialog = new AlertDialog.Builder(getActivity()).create();
       View alertDialogView = inflater.inflate(R.layout.logged_in_share, null);
@@ -1060,7 +1051,6 @@ public class AppViewFragment extends NavigationTrackFragment implements AppViewV
 
       alertDialogView.findViewById(R.id.recommend_button)
           .setOnClickListener(view -> {
-            socialRepository.share(packageName, storeId, "app");
             Snackbar.make(getView(), R.string.social_timeline_share_dialog_title,
                 Snackbar.LENGTH_SHORT)
                 .show();
@@ -1176,12 +1166,6 @@ public class AppViewFragment extends NavigationTrackFragment implements AppViewV
     bannerAd.loadAd();
   }
 
-  @Override public void populateSimilarAppc(SimilarAppsViewModel similarApps) {
-    similarListAdapter.add(
-        new SimilarAppsBundle(similarApps, SimilarAppsBundle.BundleType.APPC_APPS));
-    manageSimilarAppsVisibility(true, false);
-  }
-
   @Override public void setupAppcAppView() {
     TransitionDrawable transition = (TransitionDrawable) ContextCompat.getDrawable(getContext(),
         R.drawable.appc_gradient_transition);
@@ -1260,8 +1244,12 @@ public class AppViewFragment extends NavigationTrackFragment implements AppViewV
         .map(promotionAppClick -> promotionAppClick.getApp());
   }
 
+  @Override public void showDownloadingSimilarApps(boolean hasSimilarApps) {
+    manageSimilarAppsVisibility(hasSimilarApps, true);
+  }
+
   private void setupInstallDependencyApp(WalletPromotionViewModel viewModel) {
-    setupWalletPromotionText(viewModel, R.string.wallet_promotion__wallet_installed_message);
+    setupWalletPromotionText(viewModel, R.string.wallet_promotion_wallet_installed_message);
     walletPromotionInstallDisableButton.setText(
         String.format(getString(R.string.wallet_promotion_button_install_disabled),
             String.valueOf(viewModel.getAppcValue())));
@@ -1682,8 +1670,6 @@ public class AppViewFragment extends NavigationTrackFragment implements AppViewV
 
   @Override public void showDownloadAppModel(DownloadAppViewModel model, boolean hasDonations) {
     DownloadModel downloadModel = model.getDownloadModel();
-    SimilarAppsViewModel similarAppsViewModel = model.getSimilarAppsViewModel();
-    SimilarAppsViewModel similarAppcAppsViewModel = model.getSimilarAppcAppsViewModel();
     AppCoinsViewModel appCoinsViewModel = model.getAppCoinsViewModel();
     this.action = downloadModel.getAction();
     if (downloadModel.getAction() == DownloadModel.Action.PAY) {
@@ -1693,7 +1679,6 @@ public class AppViewFragment extends NavigationTrackFragment implements AppViewV
       appcInfoView.hideInfo();
       downloadInfoLayout.setVisibility(View.VISIBLE);
       install.setVisibility(View.GONE);
-      manageSimilarAppsVisibility(similarAppsViewModel.hasSimilarApps(), true);
       setDownloadState(downloadModel.getProgress(), downloadModel.getDownloadState());
     } else {
       if (!action.equals(DownloadModel.Action.MIGRATE)) {
@@ -1900,7 +1885,7 @@ public class AppViewFragment extends NavigationTrackFragment implements AppViewV
                     .getPrice()));
         break;
       case MIGRATE:
-        install.setText(getResources().getString(R.string.appview_button_update_to_appc));
+        install.setText(getResources().getString(R.string.promo_update2appc_appview_update_button));
     }
   }
 
